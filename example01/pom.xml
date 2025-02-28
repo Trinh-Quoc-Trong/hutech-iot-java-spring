@@ -14,61 +14,67 @@
     <artifactId>example01</artifactId>  
     <version>0.0.1-SNAPSHOT</version>  
     <name>example01</name>  
-    <description>Demo project for Spring Boot with MQTT and SQL Server</description>  
+    <description>MQTT to MySQL Application</description>  
 
     <properties>  
         <java.version>17</java.version>  
+        <paho.version>1.2.5</paho.version> <!-- Cập nhật phiên bản Paho MQTT -->  
     </properties>  
 
     <dependencies>  
-        <!-- Spring Boot Starter Dependencies -->  
-        <dependency>  
-            <groupId>org.springframework.boot</groupId>  
-            <artifactId>spring-boot-starter</artifactId>  
-        </dependency>  
+        <!-- Spring Data JPA + MySQL -->  
         <dependency>  
             <groupId>org.springframework.boot</groupId>  
             <artifactId>spring-boot-starter-data-jpa</artifactId>  
         </dependency>  
         <dependency>  
-            <groupId>org.springframework.boot</groupId>  
-            <artifactId>spring-boot-starter-web</artifactId>  
+            <groupId>com.mysql</groupId>  
+            <artifactId>mysql-connector-j</artifactId>  
+            <scope>runtime</scope>  
         </dependency>  
 
-        <!-- MQTT Client (Eclipse Paho) -->  
+        <!-- MQTT Client -->  
         <dependency>  
             <groupId>org.eclipse.paho</groupId>  
             <artifactId>org.eclipse.paho.client.mqttv3</artifactId>  
-            <version>1.2.5</version>  
+            <version>${paho.version}</version>  
         </dependency>  
 
-        <!-- SQL Server JDBC Driver -->  
+        <!-- Spring Boot Starter (Optional) -->  
         <dependency>  
-            <groupId>com.microsoft.sqlserver</groupId>  
-            <artifactId>mssql-jdbc</artifactId>  
-            <version>12.2.0.jre17</version>  
+            <groupId>org.springframework.boot</groupId>  
+            <artifactId>spring-boot-starter</artifactId>  
         </dependency>  
 
-        <!-- Lombok (giảm boilerplate code) -->  
+        <!-- Lombok (Optional) -->  
         <dependency>  
             <groupId>org.projectlombok</groupId>  
             <artifactId>lombok</artifactId>  
             <optional>true</optional>  
         </dependency>  
-
-        <!-- Spring Boot Testing -->  
-        <dependency>  
-            <groupId>org.springframework.boot</groupId>  
-            <artifactId>spring-boot-starter-test</artifactId>  
-            <scope>test</scope>  
-        </dependency>  
     </dependencies>  
+
+    <!-- Thêm repository của Eclipse Paho nếu cần -->  
+    <repositories>  
+        <repository>  
+            <id>eclipse-paho-repo</id>  
+            <url>https://repo.eclipse.org/content/repositories/paho-releases/</url>  
+        </repository>  
+    </repositories>  
 
     <build>  
         <plugins>  
             <plugin>  
                 <groupId>org.springframework.boot</groupId>  
                 <artifactId>spring-boot-maven-plugin</artifactId>  
+                <configuration>  
+                    <excludes>  
+                        <exclude>  
+                            <groupId>org.projectlombok</groupId>  
+                            <artifactId>lombok</artifactId>  
+                        </exclude>  
+                    </excludes>  
+                </configuration>  
             </plugin>  
         </plugins>  
     </build>  

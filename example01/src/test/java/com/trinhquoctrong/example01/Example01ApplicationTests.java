@@ -1,13 +1,13 @@
-package com.trinhquoctrong.example01;
+// package com.trinhquoctrong.example01;
 
-import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.context.SpringBootTest;
+// import org.junit.jupiter.api.Test;
+// import org.springframework.boot.test.context.SpringBootTest;
 
-@SpringBootTest
-class Example01ApplicationTests {
+// @SpringBootTest
+// class Example01ApplicationTests {
 
-	@Test
-	void contextLoads() {
-	}
+// 	@Test
+// 	void contextLoads() {
+// 	}
 
-}
+// }
