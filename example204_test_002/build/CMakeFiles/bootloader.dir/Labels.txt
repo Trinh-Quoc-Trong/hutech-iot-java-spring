@@ -1,0 +1,13 @@
+# Target labels
+ bootloader
+# Source files and their labels
+D:/code/projects/Hutech_IOT/example204_test_002/build/CMakeFiles/bootloader
+D:/code/projects/Hutech_IOT/example204_test_002/build/CMakeFiles/bootloader.rule
+D:/code/projects/Hutech_IOT/example204_test_002/build/CMakeFiles/bootloader-complete.rule
+D:/code/projects/Hutech_IOT/example204_test_002/build/bootloader-prefix/src/bootloader-stamp/bootloader-build.rule
+D:/code/projects/Hutech_IOT/example204_test_002/build/bootloader-prefix/src/bootloader-stamp/bootloader-configure.rule
+D:/code/projects/Hutech_IOT/example204_test_002/build/bootloader-prefix/src/bootloader-stamp/bootloader-download.rule
+D:/code/projects/Hutech_IOT/example204_test_002/build/bootloader-prefix/src/bootloader-stamp/bootloader-install.rule
+D:/code/projects/Hutech_IOT/example204_test_002/build/bootloader-prefix/src/bootloader-stamp/bootloader-mkdir.rule
+D:/code/projects/Hutech_IOT/example204_test_002/build/bootloader-prefix/src/bootloader-stamp/bootloader-patch.rule
+D:/code/projects/Hutech_IOT/example204_test_002/build/bootloader-prefix/src/bootloader-stamp/bootloader-update.rule
