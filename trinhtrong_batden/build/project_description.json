@@ -1,7 +1,7 @@
 {
     "version":            "1.1",
     "project_name":       "trinhtrong_batden",
-    "project_version":    "7875103-dirty",
+    "project_version":    "16527a9-dirty",
     "project_path":       "D:/code/projects/Hutech_IOT/trinhtrong_batden",
     "idf_path":           "C:/Users/MSI/esp/v5.4/esp-idf",
     "build_dir":          "D:/code/projects/Hutech_IOT/trinhtrong_batden/build",
