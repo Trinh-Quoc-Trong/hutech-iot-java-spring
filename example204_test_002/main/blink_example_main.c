@@ -8,7 +8,7 @@
 #include "esp_chip_info.h"
 #include "esp_flash.h"
 #include "driver/gpio.h"
-#define BLINK_GPIO GPIO_NUM_8
+#define BLINK_GPIO GPIO_NUM_48
 TaskHandle_t BlinkyTaskHandle = NULL;
 void Blinky_Task(void *arg)
 {
