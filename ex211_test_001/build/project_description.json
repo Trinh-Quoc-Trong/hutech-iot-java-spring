@@ -1,7 +1,7 @@
 {
     "version":            "1.1",
     "project_name":       "ex211_test_001",
-    "project_version":    "cd7efb44-dirty",
+    "project_version":    "ae231abf-dirty",
     "project_path":       "D:/code/projects/Hutech_IOT/ex211_test_001",
     "idf_path":           "C:/Users/MSI/esp/v5.4/esp-idf",
     "build_dir":          "D:/code/projects/Hutech_IOT/ex211_test_001/build",
@@ -11,7 +11,7 @@
     "app_elf":            "ex211_test_001.elf",
     "app_bin":            "ex211_test_001.bin",
     "build_type":         "flash_app",
-    "git_revision":       "v5.4",
+    "git_revision":       "v5.4-dirty",
     "target":             "esp32s3",
     "rev":                "",
     "min_rev":            "0",
