@@ -18,9 +18,9 @@
 #include "esp_log.h"
 #include "mqtt_client.h"
 static const char *TAG = "MQTT_EXAMPLE";
-#define ESP_WIFI_SSID "Duc Chung"
-#define ESP_WIFI_PASS "11556886"
-#define ESP_BROKER_IP "mqtt://192.168.39.188:1883" // mqtt://192.168.206.188:1883
+#define ESP_WIFI_SSID "Wifi 6 Pro Max"
+#define ESP_WIFI_PASS "mangiuqua"
+#define ESP_BROKER_IP "mqtt://192.168.100.40:1883" // mqtt://192.168.206.188:1883
 uint32_t MQTT_CONNECTED = 0;
 static void mqtt_app_start(void);
 static void wifi_event_handler(void *arg, esp_event_base_t event_base, int32_t event_id, void *event_data)
@@ -123,6 +123,28 @@ void Publisher_Task(void *params)
         }
     }
 }
+
+// code test 
+// void Publisher_Task(void *params)  
+// {  
+//     while (true)  
+//     {  
+//         if (MQTT_CONNECTED)  
+//         {  
+//             esp_mqtt_client_publish(client, "/test/topic", "Hello AIoT", 0, 0, 0);  
+//             vTaskDelay(1500 / portTICK_PERIOD_MS); // Thêm delay để giải phóng CPU  
+//         }  
+//         else  
+//         {  
+//             vTaskDelay(100 / portTICK_PERIOD_MS); // Thêm delay khi không có kết nối MQTT  
+//         }  
+//     }  
+// }  
+
+
+
+
+
 void app_main(void)
 {
     esp_err_t ret = nvs_flash_init();
