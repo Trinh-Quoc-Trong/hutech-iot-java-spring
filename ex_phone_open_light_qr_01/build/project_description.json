@@ -1,7 +1,7 @@
 {
     "version":            "1.1",
     "project_name":       "ex_phone_open_light_qr_01",
-    "project_version":    "fbcb599d-dirty",
+    "project_version":    "a2bd7a05-dirty",
     "project_path":       "D:/code/projects/Hutech_IOT/ex_phone_open_light_qr_01",
     "idf_path":           "C:/Users/MSI/esp/v5.4/esp-idf",
     "build_dir":          "D:/code/projects/Hutech_IOT/ex_phone_open_light_qr_01/build",

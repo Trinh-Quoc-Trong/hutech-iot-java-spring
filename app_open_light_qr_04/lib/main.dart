@@ -16,6 +16,11 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
+        textTheme: const TextTheme(
+          titleLarge: TextStyle(
+              fontSize: 20, color: Colors.white, fontWeight: FontWeight.bold),
+          bodyMedium: TextStyle(fontSize: 16, color: Colors.white70),
+        ),
       ),
       home: const MqttBulbControl(),
     );
@@ -62,9 +67,16 @@ class _MqttBulbControlState extends State<MqttBulbControl> {
 
     client.updates!.listen((List<MqttReceivedMessage<MqttMessage>> c) {
       final recMess = c[0].payload as MqttPublishMessage;
-      final message = MqttPublishPayload.bytesToStringAsString(recMess.payload.message);
+      final message =
+          MqttPublishPayload.bytesToStringAsString(recMess.payload.message);
       setState(() {
         receivedMessage = message;
+        // Cập nhật trạng thái bóng đèn dựa trên message nhận được
+        if (message == "1") {
+          isBulbOn = true;
+        } else if (message == "0") {
+          isBulbOn = false;
+        }
       });
     });
   }
@@ -89,7 +101,8 @@ class _MqttBulbControlState extends State<MqttBulbControl> {
     final message = isBulbOn ? '1' : '0';
     final builder = MqttClientPayloadBuilder();
     builder.addString(message);
-    client.publishMessage('/test/topic1', MqttQos.atLeastOnce, builder.payload!);
+    client.publishMessage(
+        '/test/topic1', MqttQos.atLeastOnce, builder.payload!);
   }
 
   @override
@@ -97,25 +110,55 @@ class _MqttBulbControlState extends State<MqttBulbControl> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('MQTT Bulb Control'),
+        backgroundColor: Colors.deepPurple,
+        elevation: 10,
+        shadowColor: Colors.black54,
       ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            GestureDetector(
-              onTap: _toggleBulb,
-              child: Image.asset(
-                isBulbOn ? 'assets/bulb_on.png' : 'assets/bulb_off.png',
-                width: 100,
-                height: 100,
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Colors.deepPurple, Colors.black],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          ),
+        ),
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: <Widget>[
+              GestureDetector(
+                onTap: _toggleBulb,
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 300),
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: isBulbOn ? Colors.yellowAccent : Colors.grey,
+                        blurRadius: 20,
+                        spreadRadius: 5,
+                      ),
+                    ],
+                  ),
+                  child: Image.asset(
+                    isBulbOn ? 'assets/bulb_on.png' : 'assets/bulb_off.png',
+                    width: 120,
+                    height: 120,
+                  ),
+                ),
               ),
-            ),
-            const SizedBox(height: 20),
-            Text(
-              'Received Message: $receivedMessage',
-              style: const TextStyle(fontSize: 18),
-            ),
-          ],
+              const SizedBox(height: 30),
+              Text(
+                'Received Message:',
+                style: Theme.of(context).textTheme.titleLarge,
+              ),
+              const SizedBox(height: 10),
+              Text(
+                receivedMessage,
+                style: Theme.of(context).textTheme.bodyMedium,
+              ),
+            ],
+          ),
         ),
       ),
     );

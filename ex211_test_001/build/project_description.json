@@ -1,7 +1,7 @@
 {
     "version":            "1.1",
     "project_name":       "ex211_test_001",
-    "project_version":    "ae231abf-dirty",
+    "project_version":    "a2bd7a05-dirty",
     "project_path":       "D:/code/projects/Hutech_IOT/ex211_test_001",
     "idf_path":           "C:/Users/MSI/esp/v5.4/esp-idf",
     "build_dir":          "D:/code/projects/Hutech_IOT/ex211_test_001/build",

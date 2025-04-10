@@ -1,0 +1,88 @@
+from flask import Flask, render_template, request, jsonify, send_file
+from flask_socketio import SocketIO
+import paho.mqtt.client as mqtt
+import threading
+import qrcode
+import io
+import base64
+import re
+import os
+
+app = Flask(__name__)
+socketio = SocketIO(app)
+
+def read_mqtt_config():
+    try:
+        # Lấy đường dẫn tuyệt đối của thư mục hiện tại
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        # Đường dẫn đến file app_main.c
+        app_main_path = os.path.join(os.path.dirname(current_dir), 'main', 'app_main.c')
+        
+        with open(app_main_path, 'r') as file:
+            content = file.read()
+            
+            # Tìm ESP_BROKER_IP
+            broker_match = re.search(r'#define ESP_BROKER_IP "([^"]+)"', content)
+            broker = broker_match.group(1) if broker_match else "192.168.100.40"
+            
+            # Tìm topic
+            topic_match = re.search(r'esp_mqtt_client_subscribe\(client, "([^"]+)", 0\)', content)
+            topic = topic_match.group(1) if topic_match else "/test/topic1"
+            
+            # Tách port từ broker URL
+            port = 1883
+            if ':' in broker:
+                broker, port_str = broker.split(':')
+                port = int(port_str)
+            
+            return {
+                'broker': broker,
+                'port': port,
+                'topic': topic
+            }
+    except Exception as e:
+        print(f"Lỗi khi đọc file cấu hình: {e}")
+        return {
+            'broker': "192.168.100.40",
+            'port': 1883,
+            'topic': "/test/topic1"
+        }
+
+def generate_qr():
+    # Đọc cấu hình MQTT từ file
+    config = read_mqtt_config()
+    
+    # Tạo nội dung cho mã QR
+    qr_content = f"{config['broker']},{config['port']},{config['topic']}"
+    
+    # Tạo mã QR
+    qr = qrcode.QRCode(
+        version=1,
+        error_correction=qrcode.constants.ERROR_CORRECT_L,
+        box_size=10,
+        border=4,
+    )
+    qr.add_data(qr_content)
+    qr.make(fit=True)
+    
+    # Tạo ảnh QR
+    img = qr.make_image(fill_color="black", back_color="white")
+    
+    # Chuyển đổi ảnh thành base64
+    img_buffer = io.BytesIO()
+    img.save(img_buffer, format='PNG')
+    img_str = base64.b64encode(img_buffer.getvalue()).decode()
+    
+    return img_str, config
+
+@app.route('/')
+def index():
+    qr_image, config = generate_qr()
+    return render_template('index.html', 
+                         qr_image=qr_image,
+                         broker=config['broker'],
+                         port=config['port'],
+                         topic=config['topic'])
+
+if __name__ == '__main__':
+    socketio.run(app, host='0.0.0.0', port=5000, debug=True)  
