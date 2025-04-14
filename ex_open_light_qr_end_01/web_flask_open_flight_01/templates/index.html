@@ -38,19 +38,42 @@
             border-radius: 5px;
             margin-top: 20px;
         }
+        .section {
+            margin: 20px 0;
+            padding: 15px;
+            border-radius: 5px;
+        }
+        .mqtt-info {
+            background-color: #e3f2fd;
+        }
+        .wifi-info {
+            background-color: #f3e5f5;
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Thông tin kết nối MQTT</h1>
-        <p>Quét mã QR bên dưới để lấy thông tin kết nối:</p>
-        <div class="qr-code">
-            <img src="data:image/png;base64,{{ qr_image }}" alt="MQTT QR Code">
+        <h1>Thông tin kết nối</h1>
+        
+        <div class="section mqtt-info">
+            <h2>Thông tin MQTT</h2>
+            <p>Quét mã QR bên dưới để lấy thông tin kết nối MQTT:</p>
+            <div class="qr-code">
+                <img src="data:image/png;base64,{{ qr_image }}" alt="MQTT QR Code">
+            </div>
+            <div class="info">
+                <p>Broker: {{ broker }}</p>
+                <p>Port: {{ port }}</p>
+                <p>Topic: {{ topic }}</p>
+            </div>
         </div>
-        <div class="info">
-            <p>Broker: {{ broker }}</p>
-            <p>Port: {{ port }}</p>
-            <p>Topic: {{ topic }}</p>
+
+        <div class="section wifi-info">
+            <h2>Thông tin WiFi</h2>
+            <div class="info">
+                <p>Tên WiFi: {{ wifi_ssid }}</p>
+                <p>Mật khẩu: {{ wifi_pass }}</p>
+            </div>
         </div>
     </div>
 </body>

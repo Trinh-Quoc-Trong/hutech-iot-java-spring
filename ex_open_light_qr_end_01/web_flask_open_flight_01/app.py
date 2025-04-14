@@ -23,11 +23,18 @@ def read_mqtt_config():
             
             # Tìm ESP_BROKER_IP
             broker_match = re.search(r'#define ESP_BROKER_IP "([^"]+)"', content)
-            broker = broker_match.group(1) if broker_match else "192.168.100.40"
+            broker = broker_match.group(1) if broker_match else "192.168.108.188"
             
             # Tìm topic
             topic_match = re.search(r'esp_mqtt_client_subscribe\(client, "([^"]+)", 0\)', content)
             topic = topic_match.group(1) if topic_match else "/test/topic1"
+            
+            # Tìm thông tin WiFi
+            wifi_ssid_match = re.search(r'#define ESP_WIFI_SSID "([^"]+)"', content)
+            wifi_ssid = wifi_ssid_match.group(1) if wifi_ssid_match else "Duc Chung"
+            
+            wifi_pass_match = re.search(r'#define ESP_WIFI_PASS "([^"]+)"', content)
+            wifi_pass = wifi_pass_match.group(1) if wifi_pass_match else "11556886"
             
             # Tách port từ broker URL
             port = 1883
@@ -38,14 +45,18 @@ def read_mqtt_config():
             return {
                 'broker': broker,
                 'port': port,
-                'topic': topic
+                'topic': topic,
+                'wifi_ssid': wifi_ssid,
+                'wifi_pass': wifi_pass
             }
     except Exception as e:
         print(f"Lỗi khi đọc file cấu hình: {e}")
         return {
-            'broker': "192.168.100.40",
+            'broker': "192.168.108.188",
             'port': 1883,
-            'topic': "/test/topic1"
+            'topic': "/test/topic1",
+            'wifi_ssid': "Duc Chung",
+            'wifi_pass': "11556886"
         }
 
 def generate_qr():
@@ -82,7 +93,9 @@ def index():
                          qr_image=qr_image,
                          broker=config['broker'],
                          port=config['port'],
-                         topic=config['topic'])
+                         topic=config['topic'],
+                         wifi_ssid=config['wifi_ssid'],
+                         wifi_pass=config['wifi_pass'])
 
 if __name__ == '__main__':
     socketio.run(app, host='0.0.0.0', port=5000, debug=True)  

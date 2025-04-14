@@ -23,9 +23,9 @@
 #include "driver/gpio.h"
 
 static const char *TAG = "MQTT_LED";
-#define ESP_WIFI_SSID "Wifi 6 Pro Max"
-#define ESP_WIFI_PASS "mangiuqua"
-#define ESP_BROKER_IP "mqtt://192.168.100.40:1883"
+#define ESP_WIFI_SSID "Duc Chung"
+#define ESP_WIFI_PASS "11556886"  // Không có mật khẩu vì là Open network
+#define ESP_BROKER_IP "mqtt://192.168.108.188:1883"
 #define LED_GPIO GPIO_NUM_48 // Chân GPIO để điều khiển LED
 
 static uint8_t LED_STATE = 0;
@@ -74,7 +74,7 @@ void wifi_init(void)
         .sta = {
             .ssid = ESP_WIFI_SSID,
             .password = ESP_WIFI_PASS,
-            .threshold.authmode = WIFI_AUTH_WPA2_PSK,
+            .threshold.authmode = WIFI_AUTH_OPEN,  // Thay đổi thành OPEN vì không có mật khẩu
         },
     };
     ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
