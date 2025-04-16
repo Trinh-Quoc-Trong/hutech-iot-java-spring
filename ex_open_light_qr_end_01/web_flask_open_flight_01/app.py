@@ -18,7 +18,8 @@ def read_mqtt_config():
         # Đường dẫn đến file app_main.c
         app_main_path = os.path.join(os.path.dirname(current_dir), 'main', 'app_main.c')
         
-        with open(app_main_path, 'r') as file:
+        # Mở file với encoding UTF-8
+        with open(app_main_path, 'r', encoding='utf-8') as file:
             content = file.read()
             
             # Tìm ESP_BROKER_IP
@@ -37,13 +38,23 @@ def read_mqtt_config():
             wifi_pass = wifi_pass_match.group(1) if wifi_pass_match else "11556886"
             
             # Tách port từ broker URL
-            port = 1883
-            if ':' in broker:
-                broker, port_str = broker.split(':')
-                port = int(port_str)
-            
+            port = 1883 # Giá trị port mặc định
+            broker_address = broker # Giữ lại địa chỉ gốc
+            if '://' in broker_address:
+                 # Loại bỏ phần protocol (ví dụ: 'mqtt://') để xử lý dễ hơn
+                 address_part = broker_address.split('://')[1]
+                 if ':' in address_part:
+                     last_colon_index = address_part.rfind(':')
+                     potential_port = address_part[last_colon_index+1:]
+                     if potential_port.isdigit():
+                         port = int(potential_port)
+                         # Cập nhật lại broker address không bao gồm port
+                         broker_address = broker_address[:broker_address.rfind(':')]
+            if '://' in broker_address:
+                # Đảm bảo chỉ lấy phần địa chỉ sau scheme
+                broker_address = broker_address.split('://')[1]
             return {
-                'broker': broker,
+                'broker': broker_address, # Trả về địa chỉ không có port
                 'port': port,
                 'topic': topic,
                 'wifi_ssid': wifi_ssid,
@@ -62,10 +73,10 @@ def read_mqtt_config():
 def generate_qr():
     # Đọc cấu hình MQTT từ file
     config = read_mqtt_config()
-    
-    # Tạo nội dung cho mã QR
-    qr_content = f"{config['broker']},{config['port']},{config['topic']}"
-    
+
+    # Tạo nội dung cho mã QR *** <- Sửa dòng này ***
+    qr_content = f"@mqtt://{config['broker']},{config['port']},{config['topic']}" # Thêm @mqtt://
+
     # Tạo mã QR
     qr = qrcode.QRCode(
         version=1,
@@ -75,15 +86,15 @@ def generate_qr():
     )
     qr.add_data(qr_content)
     qr.make(fit=True)
-    
+
     # Tạo ảnh QR
     img = qr.make_image(fill_color="black", back_color="white")
-    
+
     # Chuyển đổi ảnh thành base64
     img_buffer = io.BytesIO()
     img.save(img_buffer, format='PNG')
     img_str = base64.b64encode(img_buffer.getvalue()).decode()
-    
+
     return img_str, config
 
 @app.route('/')
