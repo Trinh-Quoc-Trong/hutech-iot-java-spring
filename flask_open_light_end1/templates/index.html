@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Smart Home Control</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #0077B6; /* Xanh biển chính */
+            --secondary-color: #00B4D8; /* Xanh dương nhạt */
+            --accent-color: #CAF0F8; /* Xanh rất nhạt */
+            --background-color: #F0F8FF; /* AliceBlue */
+            --card-bg-off: white;
+            --card-bg-unknown: #e9ecef; /* Xám nhạt */
+            --text-color-dark: #03045E; /* Xanh đen */
+            --text-color-light: white;
+            --shadow-color: rgba(0, 0, 0, 0.1);
+            --switch-track-off: #ccc;
+            --switch-thumb-off: #fff;
+            --switch-track-on: var(--primary-color);
+            --switch-thumb-on: #fff;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            background-color: var(--background-color);
+            color: var(--text-color-dark);
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        h1 {
+            color: var(--primary-color);
+            margin-bottom: 40px; /* Tăng khoảng cách dưới */
+            text-align: center;
+        }
+
+        .cards-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 30px; /* Khoảng cách giữa các card */
+            justify-content: center; /* Căn giữa các card */
+            padding: 0 10px; /* Thêm padding hai bên */
+        }
+
+        .light-card {
+            background-color: var(--card-bg-off);
+            border-radius: 15px;
+            padding: 25px; /* Giảm padding nhẹ */
+            box-shadow: 0 4px 15px var(--shadow-color);
+            width: calc(50% - 40px); /* Cho 2 cột trên màn hình lớn */
+            min-width: 260px; /* Chiều rộng tối thiểu */
+            max-width: 320px; /* Chiều rộng tối đa */
+            text-align: center;
+            transition: background 0.5s ease, box-shadow 0.3s ease;
+            overflow: hidden;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* Responsive: 1 cột trên màn hình nhỏ */
+        @media (max-width: 600px) {
+            .light-card {
+                width: 90%;
+                max-width: none;
+            }
+        }
+
+        .light-card.on {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            box-shadow: 0 6px 20px rgba(0, 119, 182, 0.4);
+        }
+
+        .light-card.off {
+             background-color: var(--card-bg-off);
+             box-shadow: 0 4px 15px var(--shadow-color);
+        }
+
+        .light-card.unknown {
+             background-color: var(--card-bg-unknown);
+             box-shadow: 0 4px 15px var(--shadow-color);
+        }
+
+        .light-icon {
+            font-size: 45px;
+            margin-bottom: 8px;
+            display: block;
+            transition: color 0.5s ease;
+            color: rgba(var(--text-color-dark-rgb), 0.6);
+        }
+
+        .light-card.on .light-icon {
+            color: var(--text-color-light);
+        }
+        .light-card.off .light-icon {
+            color: var(--text-color-dark);
+        }
+         .light-card.unknown .light-icon {
+            color: #6c757d;
+        }
+
+        .device-name {
+            font-size: 1.1em;
+            font-weight: 600;
+            margin-bottom: 5px; /* Giảm khoảng cách */
+            transition: color 0.5s ease;
+            word-break: break-word; /* Tránh tràn chữ */
+        }
+
+        .light-status-text {
+            font-size: 0.9em;
+            font-weight: 400; /* Giảm độ đậm */
+            margin-bottom: 20px;
+            transition: color 0.5s ease;
+            min-height: 1.2em; /* Giữ chiều cao ổn định */
+        }
+
+         .light-card.on .device-name,
+         .light-card.on .light-status-text {
+            color: var(--text-color-light);
+        }
+        .light-card.off .device-name,
+        .light-card.off .light-status-text {
+            color: var(--text-color-dark);
+        }
+         .light-card.unknown .device-name,
+         .light-card.unknown .light-status-text {
+             color: #495057;
+         }
+
+        /* Switch styles */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: var(--switch-track-off);
+            transition: .4s;
+            border-radius: 34px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 26px;
+            width: 26px;
+            left: 4px;
+            bottom: 4px;
+            background-color: var(--switch-thumb-off);
+            transition: .4s;
+            border-radius: 50%;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+        }
+
+        input:checked + .slider {
+            background-color: var(--switch-track-on);
+        }
+
+        input:focus + .slider {
+            box-shadow: 0 0 1px var(--switch-track-on);
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(26px);
+             background-color: var(--switch-thumb-on);
+        }
+
+        /* Loại bỏ button container và các nút cũ */
+        /*
+        .button-container {
+            display: flex;
+            justify-content: space-around;
+        }
+        button { ... }
+        */
+
+    </style>
+</head>
+<body>
+    <h1>Bảng điều khiển Nhà thông minh</h1>
+
+    <div class="cards-container">
+        {% set initial_states = initial_data.states or {} %}
+        {% set device_names = initial_data.names or {} %}
+        {% for topic, initial_state in initial_states.items() %}
+            {% set card_id = "light-card-" + topic.replace("/", "-").replace(".", "-") %}
+            {% set icon_id = "light-icon-" + topic.replace("/", "-").replace(".", "-") %}
+            {% set name_id = "device-name-" + topic.replace("/", "-").replace(".", "-") %}
+            {% set status_id = "light-status-" + topic.replace("/", "-").replace(".", "-") %}
+            {% set switch_id = "light-switch-" + topic.replace("/", "-").replace(".", "-") %}
+
+            <div id="{{ card_id }}" class="light-card {{ initial_state|default('unknown')|lower }}">
+                 <span id="{{ icon_id }}" class="light-icon">💡</span>
+                 <div id="{{ name_id }}" class="device-name">{{ device_names.get(topic, topic) }}</div> <!-- Lấy tên hoặc dùng topic -->
+                 <div id="{{ status_id }}" class="light-status-text">Trạng thái: Đang tải...</div>
+                 <label class="switch">
+                     <input type="checkbox" id="{{ switch_id }}" data-topic="{{ topic }}">
+                     <span class="slider"></span>
+                 </label>
+            </div>
+        {% else %}
+            <p>Không tìm thấy thiết bị nào.</p>
+        {% endfor %}
+    </div>
+
+    <!-- Form thêm thiết bị mới -->
+    <div id="add-device-section" style="margin-top: 40px; padding: 20px; background-color: #fff; border-radius: 10px; box-shadow: var(--shadow-color); max-width: 400px; width: 90%; text-align: center;">
+        <h2>Thêm thiết bị mới</h2>
+        <div style="margin-bottom: 15px;">
+            <label for="new-topic" style="display: block; margin-bottom: 5px; font-weight: 600;">Topic MQTT:</label>
+            <input type="text" id="new-topic" placeholder="Ví dụ: /myhome/light3" style="width: calc(100% - 22px); padding: 10px; border: 1px solid #ccc; border-radius: 5px;">
+        </div>
+        <div style="margin-bottom: 20px;">
+            <label for="new-name" style="display: block; margin-bottom: 5px; font-weight: 600;">Tên thiết bị (tùy chọn):</label>
+            <input type="text" id="new-name" placeholder="Ví dụ: Đèn học" style="width: calc(100% - 22px); padding: 10px; border: 1px solid #ccc; border-radius: 5px;">
+        </div>
+        <button id="btn-add-device" style="padding: 10px 20px; background-color: var(--primary-color); color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: 600;">Thêm thiết bị</button>
+        <p id="add-device-status" style="margin-top: 10px; color: green; font-size: 0.9em;"></p>
+    </div>
+
+    <script type="text/javascript">
+        const socket = io();
+
+        const cardsContainer = document.querySelector('.cards-container'); // Lấy container của cards
+        const btnAddDevice = document.getElementById('btn-add-device');
+        const inputNewTopic = document.getElementById('new-topic');
+        const inputNewName = document.getElementById('new-name');
+        const addDeviceStatus = document.getElementById('add-device-status');
+
+        // --- Voice Control Elements ---
+        const voiceStatusDiv = document.getElementById('voice-status');
+        const voiceMessageEl = document.getElementById('voice-message');
+        const micIconEl = document.getElementById('mic-icon');
+        let recognition = null;
+        let isListening = false;
+        let expectingCommand = false; // Cờ báo hiệu chờ lệnh sau wake word
+        let commandTimeout = null; // Timeout nếu không nói lệnh sau wake word
+        let deviceTopicMapping = {}; // Lưu trữ mapping: "đèn 1" -> "/test/topic1", etc.
+
+        // Dùng helper function để tạo ID hợp lệ
+        function createId(prefix, topic) {
+            const safeTopic = topic.replace(/[^a-zA-Z0-9_-]/g, '-');
+            return `${prefix}-${safeTopic}`;
+        }
+
+        // Hàm tạo HTML cho một card đèn
+        function createLightCardHTML(topic, state, name) {
+            const cardId = createId('light-card', topic);
+            const iconId = createId('light-icon', topic);
+            const nameId = createId('device-name', topic);
+            const statusId = createId('light-status', topic);
+            const switchId = createId('light-switch', topic);
+            const stateLower = state ? state.toLowerCase() : 'unknown';
+            const isChecked = state === 'ON';
+            const displayText = state === 'ON' ? "Trạng thái: Đang Bật"
+                             : state === 'OFF' ? "Trạng thái: Đã Tắt"
+                             : "Trạng thái: Không xác định";
+
+            return `
+                <div id="${cardId}" class="light-card ${stateLower}">
+                     <span id="${iconId}" class="light-icon">💡</span>
+                     <div id="${nameId}" class="device-name">${name || topic}</div>
+                     <div id="${statusId}" class="light-status-text">${displayText}</div>
+                     <label class="switch">
+                         <input type="checkbox" id="${switchId}" data-topic="${topic}" ${isChecked ? 'checked' : ''}>
+                         <span class="slider"></span>
+                     </label>
+                </div>
+            `;
+        }
+
+        // Hàm gắn listener cho một switch cụ thể
+        function attachSwitchListener(switchElement) {
+             if (switchElement.dataset.listenerAttached === 'true') return; // Chỉ gắn 1 lần
+
+            switchElement.addEventListener('change', function() {
+                const topic = this.dataset.topic;
+                const isChecked = this.checked;
+                const payload = isChecked ? '1' : '0';
+                console.log(`Gửi lệnh ${isChecked ? 'Bật (1)' : 'Tắt (0)'} tới topic ${topic}`);
+                socket.emit('publish_message', { topic: topic, payload: payload });
+            });
+             switchElement.dataset.listenerAttached = 'true'; // Đánh dấu đã gắn
+        }
+
+        // Hàm cập nhật giao diện cho TẤT CẢ các đèn (có thể thêm card mới)
+        function updateUI(states, names) {
+            console.log("Updating UI for states:", states, "Names:", names);
+            if (!states) {
+                 console.error("Received invalid states object");
+                 return;
+            }
+            names = names || {};
+            const existingTopics = new Set();
+            deviceTopicMapping = {}; // Reset mapping mỗi lần cập nhật
+            let deviceIndex = 1;
+
+            // Sắp xếp topics để đảm bảo thứ tự "đèn 1", "đèn 2" ổn định (tùy chọn)
+            const sortedTopics = Object.keys(states).sort();
+
+            for (const topic of sortedTopics) { // Lặp qua topic đã sắp xếp
+                const state = states[topic];
+                const cardId = createId('light-card', topic);
+                const iconId = createId('light-icon', topic);
+                const nameId = createId('device-name', topic);
+                const statusId = createId('light-status', topic);
+                const switchId = createId('light-switch', topic);
+
+                const lightCard = document.getElementById(cardId);
+                const deviceNameEl = document.getElementById(nameId);
+                const lightStatusText = document.getElementById(statusId);
+                const lightSwitch = document.getElementById(switchId);
+
+                existingTopics.add(topic);
+
+                // Tạo mapping cho điều khiển giọng nói
+                const deviceNumberName = `đèn ${deviceIndex}`;
+                const actualName = names[topic] || topic;
+                deviceTopicMapping[deviceNumberName] = topic; // Map "đèn 1" -> topic
+                 // Cũng map tên thật (viết thường) -> topic
+                 deviceTopicMapping[actualName.toLowerCase()] = topic;
+                console.log(`Voice Mapping: '${deviceNumberName}' -> ${topic}, '${actualName.toLowerCase()}' -> ${topic}`);
+                deviceIndex++;
+
+                if (lightCard && lightStatusText && lightSwitch) {
+                    // Card đã tồn tại -> Cập nhật
+                    const stateLower = state ? state.toLowerCase() : 'unknown';
+                    lightCard.className = `light-card ${stateLower}`;
+
+                    let displayText = "Trạng thái: Không xác định";
+                    let isChecked = false;
+                    if (state === 'ON') {
+                        displayText = "Trạng thái: Đang Bật";
+                        isChecked = true;
+                    } else if (state === 'OFF') {
+                        displayText = "Trạng thái: Đã Tắt";
+                        isChecked = false;
+                    }
+                    lightStatusText.textContent = displayText;
+                    if (deviceNameEl) {
+                         deviceNameEl.textContent = actualName; // Cập nhật tên nếu có
+                    }
+
+                    if (lightSwitch.checked !== isChecked) {
+                        lightSwitch.checked = isChecked;
+                    }
+                    // Đảm bảo listener được gắn
+                     attachSwitchListener(lightSwitch);
+                } else {
+                    // Card chưa tồn tại -> Tạo mới và thêm vào container
+                    console.log(`Creating new card for topic: ${topic}`);
+                    const newCardHTML = createLightCardHTML(topic, state, actualName);
+                    cardsContainer.insertAdjacentHTML('beforeend', newCardHTML);
+                    // Gắn listener cho switch của card mới tạo
+                    const newSwitch = document.getElementById(switchId);
+                    if (newSwitch) {
+                         attachSwitchListener(newSwitch);
+                    }
+                }
+            }
+        }
+
+        // Lấy dữ liệu ban đầu từ server
+        const initialData = {{ initial_data | tojson | safe }};
+        const initialStates = initialData ? initialData.states : {};
+        const initialNames = initialData ? initialData.names : {};
+
+        // --- Voice Recognition Setup ---
+        function setupSpeechRecognition() {
+            // Kiểm tra hỗ trợ của trình duyệt
+            window.SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (!window.SpeechRecognition) {
+                voiceMessageEl.textContent = 'Trình duyệt không hỗ trợ giọng nói.';
+                micIconEl.style.color = 'red';
+                voiceStatusDiv.style.cursor = 'not-allowed';
+                voiceStatusDiv.onclick = null; // Vô hiệu hóa click
+                console.error("Speech Recognition not supported in this browser.");
+                return null;
+            }
+
+            const rec = new SpeechRecognition();
+            rec.lang = 'vi-VN'; // Đặt ngôn ngữ tiếng Việt
+            rec.continuous = true; // Lắng nghe liên tục
+            rec.interimResults = false; // Chỉ lấy kết quả cuối cùng
+
+            rec.onstart = () => {
+                isListening = true;
+                micIconEl.style.color = 'lime';
+                micIconEl.style.animation = 'pulse 1.5s infinite';
+                voiceMessageEl.textContent = 'Đang lắng nghe...';
+                console.log('Voice recognition started.');
+            };
+
+            rec.onresult = (event) => {
+                let transcript = '';
+                // Lấy kết quả cuối cùng từ lần nhận dạng gần nhất
+                if (event.results.length > 0) {
+                     const lastResult = event.results[event.results.length - 1];
+                      if(lastResult.isFinal) {
+                           transcript = lastResult[0].transcript.trim().toLowerCase();
+                      }
+                }
+
+                if (!transcript) return; // Bỏ qua nếu không có kết quả cuối cùng
+
+                console.log('Heard:', transcript);
+
+                clearTimeout(commandTimeout); // Xóa timeout cũ nếu có
+
+                if (expectingCommand) {
+                     console.log("Processing command:", transcript);
+                     processVoiceCommand(transcript);
+                     expectingCommand = false; // Reset cờ chờ lệnh
+                     voiceMessageEl.textContent = 'Đang lắng nghe...'; // Quay lại trạng thái nghe
+                } else if (transcript.includes('ok google') || transcript.includes('okay google')) {
+                    console.log('Wake word detected!');
+                    expectingCommand = true;
+                    voiceMessageEl.textContent = 'Đang chờ lệnh...';
+                    // Đặt timeout: nếu không có lệnh trong 5s thì quay lại lắng nghe
+                    commandTimeout = setTimeout(() => {
+                        if (expectingCommand) {
+                            console.log("Command timeout.");
+                            expectingCommand = false;
+                            voiceMessageEl.textContent = 'Đang lắng nghe...';
+                        }
+                    }, 5000); // 5 giây
+                }
+            };
+
+            rec.onerror = (event) => {
+                console.error('Speech recognition error:', event.error);
+                voiceMessageEl.textContent = `Lỗi: ${event.error}`;
+                 micIconEl.style.color = 'red';
+                 micIconEl.style.animation = 'none';
+                 if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
+                     voiceMessageEl.textContent = 'Yêu cầu quyền Micro.';
+                     // Vô hiệu hóa nếu bị từ chối vĩnh viễn?
+                     isListening = false;
+                 } else if (event.error === 'no-speech') {
+                     // Bỏ qua lỗi không có giọng nói, onend sẽ tự khởi động lại
+                      voiceMessageEl.textContent = 'Không nghe thấy gì.';
+                 } else {
+                     isListening = false; // Dừng nếu có lỗi khác
+                 }
+            };
+
+            rec.onend = () => {
+                console.log('Voice recognition ended.');
+                 micIconEl.style.color = 'white';
+                 micIconEl.style.animation = 'none';
+                if (isListening) {
+                    console.log('Restarting recognition...');
+                    // Tự động khởi động lại nếu đang ở trạng thái lắng nghe
+                     setTimeout(() => rec.start(), 500); // Chờ chút trước khi restart
+                } else {
+                     voiceMessageEl.textContent = 'Nhấn để bắt đầu';
+                     expectingCommand = false;
+                }
+            };
+
+            // Click vào status để start/stop
+            voiceStatusDiv.onclick = () => {
+                if (isListening) {
+                    console.log("Manually stopping recognition.");
+                    isListening = false; // Đánh dấu là dừng chủ động
+                    rec.stop();
+                } else {
+                     try {
+                         console.log("Manually starting recognition.");
+                         rec.start();
+                     } catch (e) {
+                         console.error("Error starting recognition:", e);
+                         voiceMessageEl.textContent = `Lỗi khởi động: ${e.message}`;
+                     }
+                }
+            };
+
+            return rec;
+        }
+
+        // --- Command Processing Logic ---
+        function processVoiceCommand(command) {
+            let action = null; // '1' for ON, '0' for OFF
+            let targetDeviceTopic = null;
+
+            command = command.toLowerCase(); // Chuẩn hóa về chữ thường
+
+            if (command.includes('bật')) {
+                action = '1';
+            } else if (command.includes('tắt')) {
+                action = '0';
+            }
+
+            if (!action) {
+                console.warn("Command does not contain 'bật' or 'tắt'.");
+                voiceMessageEl.textContent = 'Lệnh không rõ.';
+                return;
+            }
+
+            // Tìm thiết bị dựa trên tên hoặc số thứ tự
+            for (const [deviceName, topic] of Object.entries(deviceTopicMapping)) {
+                 // Ưu tiên khớp tên đầy đủ hoặc "đèn x"
+                 if (command.includes(deviceName)) {
+                     targetDeviceTopic = topic;
+                     console.log(`Matched device: '${deviceName}' -> ${topic}`);
+                     break;
+                 }
+            }
+
+            // Nếu không khớp tên, thử tìm số cuối cùng và map với "đèn x"
+            if (!targetDeviceTopic) {
+                const numbersInCommand = command.match(/\d+/g); // Tìm tất cả số
+                if (numbersInCommand && numbersInCommand.length > 0) {
+                     const lastNumber = numbersInCommand[numbersInCommand.length - 1];
+                     const deviceKey = `đèn ${lastNumber}`;
+                     if (deviceTopicMapping[deviceKey]) {
+                         targetDeviceTopic = deviceTopicMapping[deviceKey];
+                         console.log(`Matched device by number: '${deviceKey}' -> ${topic}`);
+                     }
+                 }
+            }
+
+            if (targetDeviceTopic && action) {
+                voiceMessageEl.textContent = `OK: ${action === '1' ? 'Bật' : 'Tắt'} ${targetDeviceTopic}`;
+                console.log(`Executing: Topic=${targetDeviceTopic}, Payload=${action}`);
+                socket.emit('publish_message', { topic: targetDeviceTopic, payload: action });
+            } else {
+                console.warn("Could not determine target device or action.", "Command:", command, "Mapping:", deviceTopicMapping);
+                voiceMessageEl.textContent = 'Không tìm thấy thiết bị.';
+            }
+        }
+
+        // Cập nhật UI ban đầu sau khi DOM sẵn sàng
+        document.addEventListener('DOMContentLoaded', () => {
+            updateUI(initialStates, initialNames);
+            // Listener cho nút thêm thiết bị
+            btnAddDevice.addEventListener('click', () => {
+                const topic = inputNewTopic.value.trim();
+                const name = inputNewName.value.trim();
+                addDeviceStatus.textContent = ''; // Xóa thông báo cũ
+
+                if (!topic) {
+                    addDeviceStatus.style.color = 'red';
+                    addDeviceStatus.textContent = 'Vui lòng nhập Topic MQTT!';
+                    return;
+                }
+                // TODO: Có thể thêm validation cho topic format
+
+                console.log(`Yêu cầu thêm thiết bị: Topic=${topic}, Name=${name}`);
+                socket.emit('add_device', { topic: topic, name: name });
+
+                // Xóa input sau khi gửi
+                inputNewTopic.value = '';
+                inputNewName.value = '';
+                addDeviceStatus.style.color = 'green';
+                 addDeviceStatus.textContent = 'Đang gửi yêu cầu...'; // Thông báo tạm thời
+            });
+
+            // Khởi tạo Speech Recognition
+            recognition = setupSpeechRecognition();
+        });
+
+        // Lắng nghe sự kiện 'update_state' từ server
+        socket.on('update_state', function(data) {
+            console.log('Nhận cập nhật trạng thái:', data);
+            if (data && data.states) {
+                updateUI(data.states, data.names || {});
+                 if (data.message) {
+                    addDeviceStatus.style.color = data.success ? 'green' : 'red';
+                    addDeviceStatus.textContent = data.message;
+                     setTimeout(() => { addDeviceStatus.textContent = ''; }, 5000);
+                 }
+            }
+        });
+
+        // Các sự kiện kết nối/ngắt kết nối SocketIO
+        socket.on('connect', function() {
+            console.log('Đã kết nối tới SocketIO server');
+            socket.emit('request_initial_state');
+        });
+
+        socket.on('disconnect', function(reason) {
+            console.log('Đã ngắt kết nối khỏi SocketIO server:', reason);
+            const allSwitches = document.querySelectorAll('.switch input[type="checkbox"]');
+            const unknownStates = {};
+            allSwitches.forEach(sw => {
+                const topic = sw.dataset.topic;
+                if (topic) {
+                   unknownStates[topic] = 'unknown';
+                }
+            });
+            updateUI(unknownStates, initialNames);
+        });
+
+         socket.on('connect_error', (err) => {
+            console.error("Lỗi kết nối SocketIO:", err);
+        });
+
+         // Thêm CSS cho animation icon mic
+         const styleSheet = document.createElement("style");
+         styleSheet.type = "text/css";
+         styleSheet.innerText = `
+             @keyframes pulse {
+                 0% { transform: scale(1); opacity: 1; }
+                 50% { transform: scale(1.2); opacity: 0.7; }
+                 100% { transform: scale(1); opacity: 1; }
+             }
+         `;
+         document.head.appendChild(styleSheet);
+
+    </script>
+</body>
+</html> 
